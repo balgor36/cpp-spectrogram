@@ -157,10 +157,10 @@ void Spectrograph::compute(const int CHUNK_SIZE, const float OVERLAP){
               << OVERLAP * CHUNK_SIZE << std::endl;
 
     std::cout << "Step Size: " << STEP << std::endl;
-    std::cout << "Data Size: " << data_.size() << std::endl;
+    std::cout << "Data Size: " << data_src.size() << std::endl;
     
 	float end_time = TIME_STEP;
-	int len;
+	int len = 0;
 	
     // Pad the data
     for(int i = 0; len < data_src.size() && end_time < audio_length_sec; i++){

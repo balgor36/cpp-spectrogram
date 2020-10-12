@@ -20,7 +20,7 @@
 
 #define FREQ 44100
 // Time step (s)
-#define TIME_STEP 0
+#define TIME_STEP 0.3
 
 #include <string>
 #include <sndfile.hh>
