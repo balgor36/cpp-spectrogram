@@ -18,6 +18,10 @@
 #ifndef SPECTROGRAPH_H_
 #define SPECTROGRAPH_H_
 
+#define FREQ 44100
+// Time step (s)
+#define TIME_STEP 0
+
 #include <string>
 #include <sndfile.hh>
 #include <vector>
@@ -66,15 +70,20 @@ private:
     std::string fname_;
 
     SndfileHandle file_handle_;
+    // Temponary (sliced) data
     std::vector<short> data_;
+    
+    // Source data of file
+    std::vector<short> data_src;
 
     Spectrogram_t spectrogram_;
     ColorGradient gradient_;
 
     int height_ = 480;
     int width_ = height_ * 5;
+    int audio_length_sec;
 
-    float max_frequency_ = 0.5 * 44800;
+    float max_frequency_ = 0.5 * 44100;
 
     std::function<double(int, int)> window_;
     std::map<float, std::complex<double>> omega_cache_;

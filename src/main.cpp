@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 
+
 int main(int argc, const char *argv[])
 { 
     if (argc < 2){
@@ -36,6 +37,5 @@ int main(int argc, const char *argv[])
     }
     spectrograph.set_window(Utility::blackman_harris);
     spectrograph.compute(2048, 0.8);
-    spectrograph.save_image("spectrogram.png", false);
     return 0;
 }

@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 2 of the License, orfname
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -64,13 +64,13 @@ bool Spectrograph::file_is_valid(){
 void Spectrograph::read_in_data(){
     std::cout << "Reading in file: " << fname_ << std::endl;
 
-    int audio_length_sec = file_handle_.frames() / file_handle_.samplerate();
+    audio_length_sec = file_handle_.frames() / file_handle_.samplerate();
     std::cout << "Length (s): " << audio_length_sec << std::endl;
 
     const int data_size = file_handle_.channels() * file_handle_.frames();
 
-    data_ = std::vector<short>(data_size, 0);
-    file_handle_.read(&data_[0], data_.size());
+    data_src = std::vector<short>(data_size, 0);
+    file_handle_.read(&data_src[0], data_src.size());
     max_frequency_ = file_handle_.samplerate() * 0.5;
 }
 
@@ -112,7 +112,7 @@ void Spectrograph::save_image(
     const double log_coef = 
         (1.0/log(static_cast<double>(height_ + 1))) * static_cast<double>(data_size_used);
 
-    std::cout << "Drawing." << std::endl;
+    //std::cout << "Drawing." << std::endl;
     for (int x = 0; x < spectrogram_.size(); x++){
         int freq = 0;
         for (int y = 1; y <= height_; y++){
@@ -158,20 +158,36 @@ void Spectrograph::compute(const int CHUNK_SIZE, const float OVERLAP){
 
     std::cout << "Step Size: " << STEP << std::endl;
     std::cout << "Data Size: " << data_.size() << std::endl;
-
+    
+	float end_time = TIME_STEP;
+	int len;
+	
     // Pad the data
-    int new_size = 0;
-    while (new_size + CHUNK_SIZE < data_.size()){
-        new_size += STEP;
-    }
-    if (new_size != data_.size()){
-        std::cout << "Padding data." << std::endl;
-        new_size += CHUNK_SIZE;
-        std::vector<short> padding(new_size - data_.size(), 0);
-        data_.insert(data_.end(), padding.begin(), padding.end());
-    }
+    for(int i = 0; len < data_src.size() && end_time < audio_length_sec; i++){
+		len = end_time * FREQ;
+		if(TIME_STEP == 0 || TIME_STEP > audio_length_sec)
+			data_ = data_src;
+		else
+			data_ = std::vector<short>(&data_src[(end_time-TIME_STEP)*FREQ],&data_src[len]);
+			
+		int new_size = 0;
+		while (new_size + CHUNK_SIZE < data_.size()){
+			new_size += STEP;
+		}
+		if (new_size != data_.size()){
+			new_size += CHUNK_SIZE;
+			std::vector<short> padding(new_size - data_.size(), 0);
+			data_.insert(data_.end(), padding.begin(), padding.end());
+		}
 
-    chunkify(CHUNK_SIZE, STEP);
+		chunkify(CHUNK_SIZE, STEP);
+		std::cout << "Progress: " << static_cast<int>((end_time/audio_length_sec)*100)
+					<< "%" << std::endl;
+		save_image(std::string("spec")+std::to_string(i)+std::string(".png"), false);
+		if(TIME_STEP == 0 || TIME_STEP > audio_length_sec)
+			break;
+		end_time += TIME_STEP;
+	}
 }
 
 int Spectrograph::get_number_of_chunks(const int CHUNK_SIZE, const int STEP){
@@ -191,11 +207,14 @@ void Spectrograph::chunkify(const int CHUNK_SIZE, const int STEP){
     // spectrogram_.reserve((data_.size() - CHUNK_SIZE)/STEP + 1);
     spectrogram_.reserve(width_);
 
-    std::cout << "Computing chunks." << std::endl;
+	//std::cout << "===================" << std::endl;
+    //std::cout << "Computing chunks." << std::endl;
     int num_chunks = get_number_of_chunks(CHUNK_SIZE, STEP);
-    std::cout << "Number of Chunks: " << num_chunks << std::endl;
+    //std::cout << "Number of Chunks: " << num_chunks << std::endl;
+    //std::cout << "Width (px): " << width_ << std::endl;
 
     float chunk_width_ratio = static_cast<float>(num_chunks)/width_;
+    //std::cout << "chunk_width_ratio: " << chunk_width_ratio << std::endl;	
 
     int j = 0;
     float float_j = 0.0;
